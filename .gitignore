@@ -1,0 +1,27 @@
+# .NET build output
+bin/
+obj/
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+
+# Test results
+TestResults/
+*.trx
+
+# Allure
+allure-results/
+allure-report/
+.allure
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+.playwright-cli/
+
+# Environment / secrets
+.env

@@ -1,0 +1,20 @@
+{
+  "capturedVia": "playwright-cli against the real running app, not hand-written",
+  "capturedFrom": "http://localhost:4200 (overview.component.ts -> BrandService.getBrands())",
+  "capturedAt": "2026-10-25",
+  "request": {
+    "method": "GET",
+    "path": "/brands",
+    "headers": {
+      "accept": "application/json, text/plain, */*"
+    }
+  },
+  "response": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": [
+      { "id": "01M53SG0F4BJW5YT7P9CJMEJ3R", "name": "ForgeFlex Tools", "slug": "forgeflex-tools" },
+      { "id": "01M53SG0F4BJW5YT7P9CJMEJ3S", "name": "MightyCraft Hardware", "slug": "mightycraft-hardware" }
+    ]
+  }
+}

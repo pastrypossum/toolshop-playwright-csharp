@@ -1,0 +1,1 @@
+This file is not empty and should trigger a file size validation error from the contact form attachment field.

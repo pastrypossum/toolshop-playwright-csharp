@@ -1,0 +1,25 @@
+{
+  "capturedVia": "direct HTTP call against the live public API (https://api.practicesoftwaretesting.com), shaped from reading the real consumer's source directly - no playwright-cli session was available to drive the Angular app itself for this capture",
+  "capturedFrom": "PostcodeService.lookup() (_services/postcode.service.ts), called from checkout/address/address.component.ts#tryPostcodeLookup() and auth/register/register.component.ts#tryPostcodeLookup()",
+  "capturedAt": "2026-10-25",
+  "request": {
+    "method": "GET",
+    "path": "/postcode-lookup",
+    "query": { "country": "NL", "postcode": "1011AB", "house_number": "5" },
+    "headers": {
+      "accept": "application/json, text/plain, */*"
+    }
+  },
+  "response": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "street": "Autarboulevard",
+      "house_number": "5",
+      "city": "Stroe",
+      "state": "Groningen",
+      "country": "NL",
+      "postcode": "1011AB"
+    }
+  }
+}
