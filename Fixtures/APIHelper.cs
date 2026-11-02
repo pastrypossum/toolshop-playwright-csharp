@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Allure.Net.Commons.Attributes;
 using Microsoft.Playwright;
 using Toolshop.Playwright.Tests.Data.Auth;
 using Toolshop.Playwright.Tests.Utilities;
@@ -21,6 +22,7 @@ public record CustomerRegistration(string FirstName, string LastName, string Dob
 public class APIHelper(IAPIRequestContext request)
 {
     /// <summary>Logs in as the given account and returns the bearer access token.</summary>
+    [AllureStep]
     public async Task<string> LoginAsync(Account account)
     {
         var response = await request.PostAsync("/users/login", new APIRequestContextOptions
@@ -38,6 +40,7 @@ public class APIHelper(IAPIRequestContext request)
     }
 
     /// <summary>Registers a new customer via the API and returns the created user's id.</summary>
+    [AllureStep]
     public async Task<string> RegisterCustomerAsync(CustomerRegistration registration)
     {
         var response = await request.PostAsync("/users/register", new APIRequestContextOptions
@@ -66,6 +69,7 @@ public class APIHelper(IAPIRequestContext request)
     /// <c>POST /totp/setup</c> + <c>POST /totp/verify</c>, and returns the TOTP secret so the
     /// caller can compute fresh codes for its own later login attempts.
     /// </summary>
+    [AllureStep]
     public async Task<string> EnableTotpAsync(string email, string password)
     {
         var accessToken = await LoginAsync(new Account(Name: "", Role: "user", email, password));
@@ -94,6 +98,7 @@ public class APIHelper(IAPIRequestContext request)
     }
 
     /// <summary>Disables the given user (by id) using the shared admin account's authority.</summary>
+    [AllureStep]
     public async Task DisableAccountAsync(string id)
     {
         var adminToken = await LoginAsync(Accounts.Admin);
@@ -110,6 +115,7 @@ public class APIHelper(IAPIRequestContext request)
     }
 
     /// <summary>Deletes the given user (by id) using the shared admin account's authority.</summary>
+    [AllureStep]
     public async Task DeleteAccountAsync(string id)
     {
         var adminToken = await LoginAsync(Accounts.Admin);

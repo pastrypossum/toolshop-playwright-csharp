@@ -1,3 +1,4 @@
+using Allure.Net.Commons.Attributes;
 using Toolshop.Playwright.Tests.Fixtures;
 using Toolshop.Playwright.Tests.Pages;
 
@@ -14,6 +15,7 @@ public class AuthenticationActions(LoginPage loginPage, APIHelper apiHelper)
     /// is what promoted this out of being inlined in either one - see
     /// <c>common-actions.instructions.md</c>.
     /// </summary>
+    [AllureStep]
     public async Task<TotpSetupResult> RegisterAndEnableTotpAsync(CustomerRegistration registration)
     {
         var accountId = await apiHelper.RegisterCustomerAsync(registration);

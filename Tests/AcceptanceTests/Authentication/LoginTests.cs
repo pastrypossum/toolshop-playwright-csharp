@@ -72,6 +72,8 @@ public class LoginTests : ToolshopTest
             Password: $"Aa1!{uniqueId}");
     }
 
+    // ==================== AC1 - Valid credentials log the user in ====================
+
     [Test]
     [AllureStory("LoginTests")]
     [AllureName("A registered customer logging in with correct credentials is redirected to their account overview")]
@@ -87,6 +89,8 @@ public class LoginTests : ToolshopTest
             () => Assertions.Expect(_navBar.AccountMenuButton).ToHaveTextAsync(Accounts.Customer.Name));
     }
 
+    // ==================== AC2 - Invalid credentials show an error ====================
+
     [Test]
     [AllureStory("LoginTests")]
     [AllureName("Logging in with an incorrect password shows an invalid-credentials error")]
@@ -101,6 +105,8 @@ public class LoginTests : ToolshopTest
         await AllureApi.Step("Then an invalid-credentials error is shown and they stay on the login page",
             () => Assertions.Expect(_loginPage.ErrorAlert).ToHaveTextAsync("Invalid email or password"));
     }
+
+    // ==================== AC3 - Required fields are validated ====================
 
     [Test]
     [AllureStory("LoginTests")]
@@ -120,6 +126,8 @@ public class LoginTests : ToolshopTest
         });
     }
 
+    // ==================== AC4 - Redirect target depends on role ====================
+
     [Test]
     [AllureStory("LoginTests")]
     [AllureName("An admin logging in is sent to the admin dashboard instead of the account overview")]
@@ -134,6 +142,8 @@ public class LoginTests : ToolshopTest
         await AllureApi.Step("Then they are redirected to the admin dashboard",
             () => Assertions.Expect(_adminDashboard.PageTitle).ToHaveTextAsync("Sales over the years"));
     }
+
+    // ==================== AC5 - Accounts with TOTP enabled require a verification code ====================
 
     [Test]
     [AllureStory("LoginTests")]
@@ -159,7 +169,8 @@ public class LoginTests : ToolshopTest
         });
 
         await AllureApi.Step("Then they are signed in",
-            () => Assertions.Expect(_navBar.AccountMenuButton).ToBeVisibleAsync());
+            () => Assertions.Expect(_navBar.AccountMenuButton)
+                .ToHaveTextAsync($"{registration.FirstName} {registration.LastName}"));
     }
 
     [Test]
@@ -185,6 +196,8 @@ public class LoginTests : ToolshopTest
         await AllureApi.Step("Then an invalid-TOTP error is shown",
             () => Assertions.Expect(_loginPage.ErrorAlert).ToHaveTextAsync("Invalid TOTP"));
     }
+
+    // ==================== AC6 - Account is locked after repeated failed attempts ====================
 
     [Test]
     [AllureStory("LoginTests")]
@@ -238,6 +251,8 @@ public class LoginTests : ToolshopTest
         await AllureApi.Step("Then they are signed in, not locked out, and reach the admin dashboard",
             () => Assertions.Expect(_adminDashboard.PageTitle).ToHaveTextAsync("Sales over the years"));
     }
+
+    // ==================== AC7 - Disabled accounts cannot log in ====================
 
     [Test]
     [AllureStory("LoginTests")]

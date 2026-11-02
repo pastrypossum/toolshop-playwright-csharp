@@ -3,16 +3,18 @@
 ## Story: Guest creates an account
 As a guest, I want to register an account with my details, so that I can log in and shop as a customer.
 
-### AC1 - Valid details create an account
+### AC1 - Valid details create a working account
 Given a guest fills in all required registration fields with valid data
 When they submit the registration form
-Then the account is created and they are redirected to the login page
+Then they are redirected to the login page, and the new account can actually log in with the
+credentials just registered (the redirect alone is incidental - see the Relationships section:
+this is where Registration and Login meet, and the confirming proof is a real login, not the URL)
 
 **Examples:**
 
 | # | Given | When | Then |
 | --- | --- | --- | --- |
-| E1 | valid first/last name, dob, address, phone, a unique email, a password meeting complexity rules | submit registration form | redirected to `/auth/login` |
+| E1 | valid first/last name, dob, address, phone, a unique email, a password meeting complexity rules | submit registration form, then log in with that same email/password | logged in successfully - nav bar shows the new account's name |
 
 ### AC2 - Required fields are validated
 Given a guest leaves a required field empty
@@ -132,4 +134,4 @@ Then the registration is rejected with "The {field} must not contain subscript/s
 
 ## Relationships
 
-- 🔗 Successful registration redirects to the Login page rather than auto-authenticating (confirmed live - no auto-login). Same relationship already flagged from the Login side (`login-user/authentication-login.map.final.md`). Include a journey-level example here, there, or in a separate journey map - needs a human decision.
+- 🔗 Successful registration redirects to the Login page rather than auto-authenticating (confirmed live - no auto-login). Same relationship already flagged from the Login side (`login-user/authentication-login.map.final.md`). **Resolved:** this is an AC of Registration itself, not a separate journey - "a successful registration produces a working account" is proven by actually logging in with the new credentials as the confirming Example, reusing Login's own `LoginPage`/`AuthenticationActions` in Stage 3 rather than a standalone journey test.
