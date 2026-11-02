@@ -97,6 +97,24 @@ public class APIHelper(IAPIRequestContext request)
         return secret;
     }
 
+    /// <summary>
+    /// Looks up a user's id by email using the shared admin account's authority - for tests that
+    /// register through the real UI (and so never get an id back directly) but still need one for
+    /// teardown. Returns null if no such user exists.
+    /// </summary>
+    [AllureStep]
+    public async Task<string?> FindUserIdByEmailAsync(string email)
+    {
+        var adminToken = await LoginAsync(Accounts.Admin);
+        var response = await request.GetAsync($"/users/search?q={Uri.EscapeDataString(email)}", new APIRequestContextOptions
+        {
+            Headers = new Dictionary<string, string> { ["Authorization"] = $"Bearer {adminToken}" },
+        });
+
+        var data = (await response.JsonAsync())!.Value.GetProperty("data");
+        return data.GetArrayLength() > 0 ? data[0].GetProperty("id").ToString() : null;
+    }
+
     /// <summary>Disables the given user (by id) using the shared admin account's authority.</summary>
     [AllureStep]
     public async Task DisableAccountAsync(string id)

@@ -76,8 +76,27 @@ one in place of the other.
 | `[AllureNUnit]` | On the `[TestFixture]` class | **Mandatory.** Without it, the fixture is not hooked into the Allure lifecycle and produces no results at all. |
 | `[AllureParentSuite("...")]` + `[AllureSuite("...")]` + `[AllureSubSuite("...")]` | On the `[TestFixture]` class | Contract tests only — see the table above. `SubSuite` is the class/file name itself. |
 | `[AllureEpic("...")]` + `[AllureFeature("...")]` | On the `[TestFixture]` class | Acceptance tests only — see the table above. |
-| `[AllureName("...")]` | On each `[Test]` method | A readable display name, analogous to Java's `@DisplayName`/TS's `displayName()`. Use a concrete sentence describing the scenario, not the bare method name. |
+| `[AllureName("...")]` | On each non-parameterized `[Test]` method | A readable display name, analogous to Java's `@DisplayName`/TS's `displayName()`. Use a concrete sentence describing the scenario, not the bare method name. Takes a plain `string` only — confirmed from the installed package's own XML docs, not assumed — there's no templating/placeholder support for per-case values. |
 | `[AllureStory("...")]` | On a `[Test]` method (optional, acceptance tests only) | The file/class level for acceptance tests, mirroring `SubSuite` above. Add it the moment a feature folder gets a second file — not currently used, since none have yet. |
+
+## Naming a parameterized test - don't use `[AllureName]` at all
+
+`[AllureName]`'s `string` is fixed at compile time, so it can't read a `[TestCase]`'s or
+`[TestCaseSource]`'s per-case argument values - there's no way to make one static string correct for
+every case. The actual standard approach, confirmed by running it, not guessed: **omit
+`[AllureName]` entirely on a parameterized test** and let Allure.NUnit fall back to NUnit's own
+generated test name as the report's display name instead:
+
+- `[TestCase(...)]` without an explicit name produces NUnit's own args-based name
+  (`MethodName("abc","Password must be minimal 6 characters long.")`) - readable enough on its own
+  for a couple of positional values.
+- `[TestCaseSource(nameof(...))]` returning `TestCaseData` can call `.SetName("...")` per case for a
+  cleaner name than the raw argument dump - e.g. `RequiredFieldIsValidated(FirstName)` instead of a
+  dump of `Func<>` delegates. Prefer this whenever a case's parameters aren't themselves readable
+  (see `writing-acceptance-tests.instructions.md`'s parameterization pattern, which passes `Func<>`
+  values for exactly this reason).
+
+Both show up correctly as the test's name in the Allure report with no further attribute needed.
 
 See `Tests/AcceptanceTests/Contact/ContactCustomerSupportTests.cs` and `Tests/ContractTests/Brand/BrandSpecTests.cs` for the real pattern:
 

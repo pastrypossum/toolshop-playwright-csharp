@@ -1,6 +1,6 @@
 ---
 name: writing-acceptance-tests
-description: Stage 2 of the existing-feature-acceptance-testing workflow - turning a finalized example map into real test code. Covers file/directory structure, when to parameterize, Given/When/Then structure, assertion style, reuse of existing supporting code, Allure reporting, test-data construction, and tearing down what a test creates. Does not cover implementing page objects, API helpers, fixtures or other utilities - only using what exists, or naming what doesn't yet.
+description: Stage 2 of the existing-feature-acceptance-testing workflow - turning a finalized example map into real test code. Covers file/directory structure, when to parameterize, testing through to the real backend (not stopping at client-side validation), Given/When/Then structure, assertion style, reuse of existing supporting code, Allure reporting, test-data construction, tearing down what a test creates, and recording a known gap (real app bug, not test defect) in ExampleMaps/known-gaps.md. Does not cover implementing page objects, API helpers, fixtures or other utilities - only using what exists, or naming what doesn't yet.
 ---
 
 # Writing Acceptance Tests (from a finalized example map)
@@ -52,11 +52,33 @@ empty, assert message Y" Examples, where only the field name and message change.
 that need different setup or prove different things, even if they happen to look similar at a
 glance - don't force them together.
 
-NUnit's `[AllureName]` behavior on a parameterized `[TestCase]` hasn't been verified in this project
-yet (no existing test is parameterized) - check it empirically the first time, don't assume it
-behaves like the non-parameterized case.
+Don't put `[AllureName]` on a parameterized test at all - it can't read per-case argument values
+(confirmed from the installed package's own docs). Use `[TestCaseSource]` + `TestCaseData.SetName(...)`
+for a readable per-case name instead - see `allure.instructions.md`'s "Naming a parameterized test"
+section.
 
-## 3. Given/When/Then structure
+## 3. Test through to the real backend
+
+Every Example exercises the real backend, not just the client - submit the way a real user would
+and let the request actually happen, rather than stopping short at client-side validation to dodge
+an inconvenient interaction with another AC. The only exception is a genuinely UI-specific rule that
+has no backend counterpart at all - the backend never sees the request because the browser itself
+won't send it (e.g. a client-only required-field validator that blocks submission entirely before
+any network call could fire). If the same rule is *also* enforced server-side (length, complexity,
+format), it doesn't qualify for the exception just because the client happens to catch it too -
+exercise the real path.
+
+Concretely: a required-field check that the Angular form blocks before any HTTP call is a real
+exception (there's no way to reach the backend in that state at all, even as a real user - leaving
+every other field empty too, as AC2-style Examples do, is still within the exception since the whole
+form stays client-invalid). A password-length check that's enforced both client *and* server-side is
+not an exception - don't engineer a test (e.g. "submit only the password field, leave everything
+else blank") just to avoid submitting a full, real registration. If that trick is the only way to
+dodge a data conflict with another AC (see `exploration.instructions.md`'s cross-AC consistency
+check), the fix is a different, valid test-data value, not a narrower test that no longer proves
+what a real user would experience.
+
+## 4. Given/When/Then structure
 
 Direct translation from the AC's own Given/When/Then prose, filled in with the Example's concrete
 data - wrap each clause in `AllureApi.Step("<clause text>", ...)` (see `allure.instructions.md`)
@@ -78,7 +100,7 @@ A clause with more than one statement takes a block body (`async () => { await .
 Little judgement needed here beyond picking natural variable names for the Example's data - the
 clause text itself should read as close to the map's own prose as the concrete Example allows.
 
-## 4. Assertions
+## 5. Assertions
 
 Assert **tangible, user-visible/usable state or output data** - something the user could see or use,
 not an implementation detail. For a "redirected to X" claim, that means asserting content specific to
@@ -90,7 +112,7 @@ the page is correct.
 Prefer Playwright's auto-retrying `Assertions.Expect(locator)...Async()` for anything UI-state
 related; plain `Assert.That(...)` only for ordinary C# values (see `test.instructions.md`).
 
-## 5. Reuse before writing anything new
+## 6. Reuse before writing anything new
 
 Check what already exists before writing a test line: shared reference datasets (`Accounts.cs`),
 existing page objects (`NavBar`, etc.), existing fixtures. Use them directly. Where something's
@@ -99,7 +121,7 @@ if it already existed**, in the shape this project's `page-object`/`api-helper` 
 move on. Don't stub it, don't implement a minimal version "just to compile" - that's Stage 3's job,
 and a half-real stub is worse than an honest gap.
 
-## 6. Allure reporting, and making it filterable
+## 7. Allure reporting, and making it filterable
 
 Direct application of the existing rule (`allure.instructions.md`): `[AllureNUnit]` +
 `[AllureEpic("AcceptanceTests")]` + `[AllureFeature("<Area>")]` on the class, `[AllureStory("<file
@@ -111,7 +133,7 @@ what makes the Feature runnable via `dotnet test --filter "TestCategory=<Area>"`
 separate systems serving separate consumers (Allure's attributes never reach the test runner's
 filter - see `allure.instructions.md`), so both go on, together, every time.
 
-## 7. Test data construction
+## 8. Test data construction
 
 This is the one part of this stage whose output is real, compiling code, not aspirational calls -
 see `test-data.instructions.md` for the full rule. Check what already exists, in order, before
@@ -122,7 +144,7 @@ writing anything new:
 2. **A dynamic factory already fits** (e.g. `ContactMessageFactory`) → use it directly.
 3. **Nothing existing fits** → construct the data inline in the test file (a private helper method,
    or inline `Bogus` calls), rather than naming a new factory ahead of time. Unlike page
-   objects/API helpers (Section 5), test-data *shape* is not something to presuppose aspirationally -
+   objects/API helpers (Section 6), test-data *shape* is not something to presuppose aspirationally -
    build it for real, here, now. Extracting it into a proper `Data/{Area}/{Name}Factory.cs` is a
    Refactor-stage call, made once a second test file actually needs the same shape.
 4. **A narrow expected value** (one error string, asserted by exactly one test file) → inline in
@@ -133,7 +155,7 @@ it (lockout, disabling, enabling TOTP, a password change) - see "User Accounts" 
 `test-data.instructions.md`. A mutating test builds and tears down a throwaway account instead (see
 below).
 
-## 8. Tearing down what a test creates
+## 9. Tearing down what a test creates
 
 A test that builds a throwaway account (or any other stateful data) for itself must also remove it -
 don't leave it behind for the suite to accumulate. Write the cleanup as an explicit, visible step,
@@ -142,9 +164,9 @@ not an implicit assumption:
 - Use NUnit's `[TearDown]`, wrapped in its own `AllureApi.Step("Cleanup: ...", ...)` the same as any
   other step, so it shows up in the report and still runs whether the test passed or failed.
 - Call an existing deletion/cleanup method on whatever owns the data (e.g. the API helper) if one
-  exists. If it doesn't, name the prospective method the same way Section 5 names any other
+  exists. If it doesn't, name the prospective method the same way Section 6 names any other
   not-yet-built supporting code - aspirational, not stubbed.
-- A test that only reads through a shared seeded account (Section 7) has nothing of its own to tear
+- A test that only reads through a shared seeded account (Section 8) has nothing of its own to tear
   down - `[TearDown]` should no-op for it, not call cleanup unconditionally.
 
 ```csharp
@@ -159,6 +181,27 @@ public async Task TearDown()
         () => _apiHelper.DeleteAccountAsync(_createdAccountEmail));
 }
 ```
+
+## 10. Known gaps - when the app itself is wrong, not the test
+
+Testing through to the real backend (Section 3) sometimes reveals that the app's actual behaviour
+doesn't match what the map/source says it should be - not a test-writing mistake, a real product
+bug. Don't quietly drop the Example, and don't rewrite the assertion to match the buggy behaviour
+(that would make a real bug look like intended behaviour). Instead, write the test asserting the
+*intended* behaviour, let it be deliberately red, and record it:
+
+1. The test itself stays separate from the feature's otherwise-green tests - its own `[Test]`
+   method, clearly named (e.g. `TooOldIsNotActuallyRejected`, not folded into a parameterized test
+   alongside working cases), same spirit as this project's existing contract-test convention for a
+   known gap (`Tests/ContractTests/User/UserAgeValidationGapSpecTests.cs` and siblings) - a feature's
+   test file stays all-green-or-all-meaningfully-red, not a mix within one test.
+2. Add an entry to `ExampleMaps/known-gaps.md` (see that file for the exact format) - what's wrong,
+   how it was confirmed (live app or a direct API call, not just source-reading), and which test
+   documents it. This is what lets anyone cross-check an open gap against the app or the suite later
+   without re-deriving it from scratch.
+3. If the gap affects teardown (the broken behaviour still creates/mutates real data, as a
+   registration that should have been rejected but wasn't), track and clean it up exactly as Section
+   9 describes, regardless of whether the test's own assertion passes or fails.
 
 ## Coherence over compiling
 

@@ -153,6 +153,11 @@ fixing it silently.
    just "an attribute is present somewhere."
 9. **Map traceability** - every Example from Stage 1's final map maps to a test; every test traces
    back to an Example. Anything orphaned on either side is worth a second look before finishing.
+10. **Known gaps are current** - cross-check `ExampleMaps/known-gaps.md` against this feature's own
+    gap entries (if any): the covering test still exists and is still red for the stated reason, not
+    silently skipped or quietly turned green by a change elsewhere. `known-gaps.md` is also something
+    worth re-checking on its own, independent of any particular feature's Stage 4 pass, since a gap
+    can get fixed by work that has nothing to do with the feature that found it.
 
 ### Process
 

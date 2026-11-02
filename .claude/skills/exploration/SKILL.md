@@ -70,6 +70,19 @@ branches of the same app), confirm which variant the running instance is actuall
 string, a build date, a feature only present in one variant) before trusting what you read - don't
 assume the first matching file you find is the one that's live.
 
+**Confirm every Example through both the live app and the source where both are possible.** When
+only one is actually possible (the live app can't reach the state - no seeded account exists to
+exercise it, say), **use the source, not a live-only guess.** Write the Example to the
+source-documented/intended behaviour and let Stage 2's eventual test assert it for real. If the live
+app turns out to disagree, that test *fails* - and a failing test is a definite, confirmed finding,
+not an assumption. The alternative (asserting whatever's observed live, or just noting "not yet
+live-tested" as a footnote) risks quietly codifying a real bug as correct, or leaving a genuine gap
+invisible until someone happens to re-check it. Found for real in this project: Registration's AC6
+age-ceiling Example was written from source alone (`StoreCustomer.php`'s `after: 75 years ago` rule)
+with exactly this reasoning - Stage 3's test, asserting that source-documented rule, failed live, and
+that failure is what proved the rule doesn't actually work. Source-then-live-check is a strength of
+this exploration process, not a fallback to apologise for in a footnote.
+
 ### 4. Tag every finding
 
 Classify everything you found in steps 2-3 using exactly these six tags:
@@ -93,6 +106,26 @@ test itself, not to this read-mostly stage). The correct, *final* shape of that 
 the value comes from and how it's computed at runtime, with a dummy placeholder standing in for the
 literal value - that counts as fully covered, not provisional. Don't confuse "this field is
 necessarily dynamic" with "this AC is under-explored."
+
+### 3b. Cross-AC/Example data consistency
+
+Check whether a literal data value (a password, an email, a date) gets reused across more than one
+AC's Examples - and if so, whether what each AC claims about that value is actually compatible.
+Found for real in this project's Registration map: AC3-E3 proposed the password `Abcd123!` as proof
+the length check passes, while AC7-E1 proposed the *same literal password* as proof it gets
+breach-rejected - both claims are individually correct, but not simultaneously true of one value, so
+no real test could ever use it for both purposes at once. This kind of conflict is invisible within
+either AC's own section and only surfaces once Stage 2 tries to build real test data from the map -
+catch it here instead.
+
+Reuse itself isn't the problem - two Examples genuinely sharing a stable precondition (the same
+seeded account, the same known-invalid format) is fine and keeps the map's data surface small. What
+makes it a real conflict is two Examples needing contradictory things to be true of the *same*
+literal value. The other hard constraint, independent of reuse: every Example must stay testable on
+its own - a test built from one Example can never depend on another Example's test having run first
+or left behind state, even when they happen to describe the same input. Flag a genuine value
+conflict as a ❓ Question, same as any other finding - don't resolve it silently by picking one AC's
+claim over the other.
 
 ### 4a. Every Question must reach a terminal state
 

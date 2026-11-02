@@ -18,15 +18,12 @@ description: Conventions for creating or updating Playwright page objects in thi
 
 ---
 
-## File Locations
+## Locator Priority - MANDATORY
 
-| Type | Directory | Naming |
-| --- | --- | --- |
-| Page objects | `Pages/` | `{Name}.cs`, class `{Name}` |
-
-Real examples in this project: `Pages/NavBar.cs`, `Pages/ProductListPage.cs`, `Pages/ContactPage.cs`.
-
----
+This section is not optional guidance - every locator added to this project, in any page object,
+follows it. Checking "did I try Role/Text/Label first" is not a nice-to-have; skipping straight to
+`GetByTestId` out of habit is a Stage 4 finding every time it's caught, and it has been caught more
+than once already (see the real cases below).
 
 ## Never guess a locator - find it
 
@@ -98,6 +95,30 @@ exactly what the test is about to assert (`GetByText("Sales over the years")` im
 by `.ToHaveTextAsync("Sales over the years")`), the assertion can't fail - it's vacuous. Locate by
 role alone (`GetByRole(AriaRole.Heading, new() { Level = 1 })`, no `Name` filter) and let the test's
 own assertion be the one place the specific expected text appears.
+
+**A `role="alert"` on a conditionally-rendered error `<div>` doesn't make `GetByRole` the right
+call.** Found for real on the Registration form: every per-field error region has an explicit
+`role="alert"`, but several can be attached at once (submitting a mostly-empty form shows many
+fields' errors together) with no distinguishing accessible name between them - Role exists but can't
+disambiguate, so TestId is still correct here. Don't write "no mapped role" in a comment without
+actually checking - say what the real reason is (ambiguity, not absence).
+
+**Habit is the real risk, not any single hard case.** The first full pass at `RegisterPage` (a
+12-field form) reached for `GetByTestId` on every plain text input by default, despite this same
+priority order having just been established - not because any of them were genuinely hard cases,
+every one of them had a real `<label>` and a mapped role once actually checked. It was caught in a
+Stage 4 review, not before. Reaching for TestId by default is the thing this section exists to
+prevent; treat every new locator as a case to justify, not a default to fall back to.
+
+---
+
+## File Locations
+
+| Type | Directory | Naming |
+| --- | --- | --- |
+| Page objects | `Pages/` | `{Name}.cs`, class `{Name}` |
+
+Real examples in this project: `Pages/NavBar.cs`, `Pages/ProductListPage.cs`, `Pages/ContactPage.cs`.
 
 ---
 
